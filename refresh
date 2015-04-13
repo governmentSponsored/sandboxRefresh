@@ -1,0 +1,79 @@
+#!/bin/bash
+
+#copy config files
+echo "Begin copying config files"
+cp /var/www/nationalservice/sites/default/settings.php /usr/local/bin/sites/ns
+cp /var/www/nationalservice/sifmap2/app/Config/database.php /usr/local/bin/sites/ns
+cp /var/www/nationalservice/.htaccess /usr/local/bin/sites/ns
+cp /var/www/nsr-tta/sites/default/settings.php /usr/local/bin/sites/nsr-tta
+cp /var/www/nsr-tta/.htaccess /usr/local/bin/sites/nsr-tta
+cp /var/www/serve/sites/default/settings.php /usr/local/bin/sites/serve
+cp /var/www/serve/.htaccess /usr/local/bin/sites/serve
+echo "Config files copied"
+
+#Remove existing .tar.gz files so directory doesn't get overloaded
+echo "Begin deleting old .tar.gz and .sql.gz files, before downloading new ones. Ignore errors."
+rm /var/www/sites/*.tar.gz*
+rm /var/www/sites/*.sql*
+echo "Deleted .tar.gz and .sql files in /var/www/sites/"
+
+#Download new versions of those files
+echo "Begin downloading new .tar.gz and .sql.gz files"
+cd /var/www/sites
+wget http://172.16.151.21/apache_backup_ns.tar.gz
+wget http://172.16.151.21/daily_dbcncs01.sql.gz
+wget http://172.16.151.21/daily_dbsifmap2.sql.gz
+wget http://172.16.151.21/daily_sifmaptest.sql.gz
+echo "Newest files downloaded"
+
+#Remove old temp directoires
+echo "Removing old untarred/unzipped directories"
+rm -rf /var/www/sites/mnt
+rm -rf /var/www/sites/var
+echo "Old untarred/unzipped directories removed"
+
+#untar, unzip
+echo "Begin untarring (will take a long time!) and unzipping"
+tar -xzvf apache_backup_ns.tar.gz
+echo "Untarring finished, now unzipping"
+gunzip /var/www/sites/*.sql.gz
+echo "National Service files untarred, database unzipped"
+
+#Remove old ns site and make/move new one
+echo "Begin removing old NS site directory and then adding new one. Ignore errors."
+rm -rf /var/www/ns
+mkdir /var/www/ns
+mv /var/www/sites/mnt/wwwtemp/www/* /var/www/ns
+mv /var/www/sites/mnt/wwwtemp/www/.* /var/www/ns
+echo "Removed old National Service Site directory and added new one"
+
+#Change ownership & copy config files
+echo "Begin ownership rights updates, config file copying, and adding new sif map"
+chown -R www-data:www-data /var/www/ns
+cp /usr/local/bin/sites/ns/.htaccess /var/www/ns
+cp /usr/local/bin/sites/ns/settings.php /var/www/ns/sites/default/
+cp /usr/local/bin/sites/ns/database.php /var/www/ns/sifmap2/app/Config/
+chown www-data:www-data /var/www/ns/sites/default/settings.php
+chown www-data:www-data /var/www/ns/.htaccess
+chown www-data:www-data /var/www/ns/sifmap2/app/Config/database.php
+rm /var/www/ns/sif-map
+rm /var/www/ns/sifmap
+ln -s /var/www/ns/sifmap2 /var/www/ns/sifmap
+ln -s /var/www/ns/sifmap2 /var/www/ns/sif-map
+echo "national service site directory ready, database next"
+
+#Update the database [change stsmith to your username, be sure to use the original password that GbH sent]
+echo "Begin database updates, remember to enter your password"
+echo "Enter your password to drop the old database"
+mysql -u stsmith -p -D dbcncs01 -e 'drop database dbcncs01'
+echo "Enter your password to create the new database"
+mysql -u stsmith -p -e 'create database dbcncs01 charset utf8;'
+echo "Enter your password to import data into new database"
+mysql -u stsmith -p dbcncs01 </var/www/sites/daily_dbcncs01.sql
+echo "national service database ready"
+
+#final folder renaming
+echo "moving directories to final location so fqdn works"
+mv /var/www/nationalservice /var/www/nationalservice_old
+mv /var/www/ns /var/www/nationalservice
+echo "sandbox.nationalservice.gov is now ready"
