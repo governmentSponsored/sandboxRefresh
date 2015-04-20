@@ -1,2 +1,2 @@
 # sandboxRefresh
-A shell script I wrote to automate the refresh of drupal sandbox sites
+A shell script to automate the refresh of drupal sandbox site
