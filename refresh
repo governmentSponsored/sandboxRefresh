@@ -18,10 +18,10 @@ echo "Deleted .tar.gz and .sql files in /var/www/sites/"
 #Download new versions of those files
 echo "Begin downloading new .tar.gz and .sql.gz files"
 cd /var/www/sites
-wget http://172.16.151.21/apache_backup_ns.tar.gz
-wget http://172.16.151.21/daily_dbcncs01.sql.gz
-wget http://172.16.151.21/daily_dbsifmap2.sql.gz
-wget http://172.16.151.21/daily_sifmaptest.sql.gz
+wget http://[[REDACTED]]/apache_backup_ns.tar.gz
+wget http://[[REDACTED]]/daily_dbcncs01.sql.gz
+wget http://[[REDACTED]]/daily_dbsifmap2.sql.gz
+wget http://[[REDACTED]]/daily_sifmaptest.sql.gz
 echo "Newest files downloaded"
 
 #Remove old temp directoires
